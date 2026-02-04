@@ -1,0 +1,230 @@
+
+<!DOCTYPE html><html lang="en"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Grammar Mastery Quiz</title>    <style>        :root {            --primary: #4a90e2;            --success: #2ecc71;            --error: #e74c3c;            --dark: #2c3e50;        }        body {            margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif;            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),                         url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80');            background-size: cover; background-attachment: fixed;            display: flex; justify-content: center; align-items: center; min-height: 100vh; color: white;        }        .quiz-card {            background: rgba(255, 255, 255, 0.98); color: var(--dark);            width: 90%; max-width: 600px; border-radius: 20px; padding: 35px;            box-shadow: 0 15px 35px rgba(0,0,0,0.4); text-align: center;            max-height: 90vh; overflow-y: auto;        }        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }        #timer { font-size: 22px; font-weight: bold; color: var(--error); border: 2px solid var(--error); padding: 5px 15px; border-radius: 10px; }        .progress-bar { width: 100%; height: 14px; background: #eee; border-radius: 10px; margin: 20px 0; display: flex; overflow: hidden; }        .progress-segment { height: 100%; transition: width 0.3s ease; border-right: 1px solid white; }        .correct-bg { background-color: var(--success); }        .wrong-bg { background-color: var(--error); }        .question-text { font-size: 1.3rem; font-weight: 600; margin-bottom: 25px; line-height: 1.4; color: #34495e; }        .option {            display: block; width: 100%; padding: 15px; margin: 12px 0;            border: 2px solid #ddd; border-radius: 12px; cursor: pointer;            font-size: 16px; transition: all 0.2s; text-align: left; background: white;        }        .option:hover { background: #f0f7ff; border-color: var(--primary); }        .selected { border-color: var(--primary); background: #ebf5ff; box-shadow: 0 0 10px rgba(74,144,226,0.2); }        .correct { background: #d4edda !important; border-color: var(--success) !important; color: #155724; font-weight: bold; }        .wrong { background: #f8d7da !important; border-color: var(--error) !important; color: #721c24; }        button {            margin-top: 15px; padding: 15px 45px; font-size: 18px; font-weight: bold;            border-radius: 30px; border: none; cursor: pointer; transition: 0.3s;        }        #check-btn { background: var(--primary); color: white; }        #next-btn { background: var(--success); color: white; }        .review-item { text-align: left; background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--error); font-size: 14px; }        input[type="text"] {            padding: 15px; width: 80%; border-radius: 12px; border: 2px solid var(--primary);            font-size: 1rem; margin-bottom: 20px; outline: none;        }        .hidden { display: none; }    </style></head><body>
+
+<div class="quiz-card" id="start-screen">
+    <h1>Grammar Challenge</h1>
+    <p>Topic: Subject, Object & Indirect Questions</p>
+    <input type="text" id="student-name" placeholder="Enter your full name">
+    <br>
+    <button id="check-btn" onclick="startQuiz()">Start Quiz</button>
+</div>
+
+<div class="quiz-card hidden" id="quiz-container">
+    <div class="header">
+        <span id="q-count" style="font-weight: bold;">Question 1/10</span>
+        <div id="timer">05:00</div>
+    </div>
+    <div class="progress-bar" id="progressBar"></div>
+    <div id="game-area">
+        <div class="question-text" id="question">Loading...</div>
+        <div id="options-container"></div>
+        <button id="check-btn-act" onclick="checkAnswer()">Check Answer</button>
+        <button id="next-btn" class="hidden" onclick="goToNextQuestion()">Next Question</button>
+    </div>
+</div>
+
+<div class="quiz-card hidden" id="result-card">
+    <h2>Quiz Results</h2>
+    <h1 id="final-score" style="font-size: 3rem; color: var(--primary);">0/10</h1>
+    <div id="analysis-area" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;"></div>
+    <button id="check-btn" onclick="location.reload()">Try Again</button>
+</div>
+
+<audio id="snd-correct" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio><audio id="snd-wrong" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"></audio>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjaoBxGbsuMNHNvenbb_3wAw1XKuGLHSFoSHbvT3NL0zAkFbWSppPQVyYLxjTxCJFp/exec";
+
+const questionBank = [
+    // SUBJECT QUESTIONS
+    { q: "Choose the correct Subject Question:", a: "Who discovered the secret entrance?", b: "Who did discover the secret entrance?", c: "Who discovered the secret entrance did?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "What did happen at the meeting?", b: "What happened at the meeting?", c: "What happens did at the meeting?", correct: 1 },
+    { q: "Choose the correct Subject Question:", a: "Which student won the scholarship?", b: "Which student did win the scholarship?", c: "Which student winned the scholarship?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "How many people did attend?", b: "How many people attended?", c: "How many people does attend?", correct: 1 },
+    { q: "Choose the correct Subject Question:", a: "Who broken the expensive vase?", b: "Who did break the expensive vase?", c: "Who broke the expensive vase?", correct: 2 },
+    { q: "Choose the correct Subject Question:", a: "What makes you feel happy?", b: "What does make you feel happy?", c: "What did made you feel happy?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "Which car crashed into the fence?", b: "Which car did crash into the fence?", c: "Which car crashed did into the fence?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "Who phoned you last night?", b: "Who did phone you last night?", c: "Who does phone you last night?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "What caused the power cut?", b: "What did cause the power cut?", c: "What was caused the power cut?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "Who wrote this amazing novel?", b: "Who did write this amazing novel?", c: "Who did wrote this amazing novel?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "What inspires your work?", b: "What does inspire your work?", c: "What did inspired your work?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "Who left the lights on?", b: "Who did leave the lights on?", c: "Who leaved the lights on?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "Which team scored the goal?", b: "Which team did score the goal?", c: "Which team scored did the goal?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "Who told you the news?", b: "Who did tell you the news?", c: "Who did told you the news?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "What fell off the shelf?", b: "What did fall off the shelf?", c: "What was fallen off the shelf?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "Who paid for the dinner?", b: "Who did pay for the dinner?", c: "Who did paid for the dinner?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "How many guests came?", b: "How many guests did come?", c: "How many guests was come?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "Who owns that building?", b: "Who does own that building?", c: "Who owning that building?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "What costs more than $100?", b: "What does cost more than $100?", c: "What costed more than $100?", correct: 0 },
+    { q: "Choose the correct Subject Question:", a: "Who suggested this idea?", b: "Who did suggest this idea?", c: "Who suggested did this idea?", correct: 0 },
+    // OBJECT QUESTIONS
+    { q: "Choose the correct Object Question:", a: "What did you buy yesterday?", b: "What you bought yesterday?", c: "What you did buy yesterday?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "Who you met at the park?", b: "Who did you meet at the park?", c: "Who did you met at the park?", correct: 1 },
+    { q: "Choose the correct Object Question:", a: "Where she went for vacation?", b: "Where did she go for vacation?", c: "Where did she goes for vacation?", correct: 1 },
+    { q: "Choose the correct Object Question:", a: "When did they arrive?", b: "When they did arrive?", c: "When they arrived?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "How do you spell your name?", b: "How you spell your name?", c: "How does you spell your name?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "Why he left so early?", b: "Why did he leave so early?", c: "Why did he left so early?", correct: 1 },
+    { q: "Choose the correct Object Question:", a: "Which film you saw?", b: "Which film did you see?", c: "Which film did you saw?", correct: 1 },
+    { q: "Choose the correct Object Question:", a: "What time the train leaves?", b: "What time does the train leave?", c: "What time leave the train?", correct: 1 },
+    { q: "Choose the correct Object Question:", a: "How much did it cost?", b: "How much it costed?", c: "How much it did cost?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "Who does he like?", b: "Who he likes?", c: "Who he does like?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "What did they decide?", b: "What they decided?", c: "What they did decide?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "Where did you put the keys?", b: "Where you put the keys?", c: "Where you did put the keys?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "How long you stayed?", b: "How long did you stay?", c: "How long did you stayed?", correct: 1 },
+    { q: "Choose the correct Object Question:", a: "Why she is crying?", b: "Why is she crying?", c: "Why is she cry?", correct: 1 },
+    { q: "Choose the correct Object Question:", a: "Who did you invite?", b: "Who you invited?", c: "Who did you invited?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "What did she say?", b: "What she said?", c: "What she did say?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "Where did he go?", b: "Where he went?", c: "Where he did go?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "When did you finish?", b: "When you finished?", c: "When you did finish?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "Which color do you prefer?", b: "Which color you prefer?", c: "Which color you do prefer?", correct: 0 },
+    { q: "Choose the correct Object Question:", a: "How often do you exercise?", b: "How often you exercise?", c: "How often you do exercise?", correct: 0 },
+    // INDIRECT QUESTIONS
+    { q: "Choose the correct Indirect Question:", a: "Can you tell me where is the bank?", b: "Can you tell me where the bank is?", c: "Can you tell me where does the bank is?", correct: 1 },
+    { q: "Choose the correct Indirect Question:", a: "Do you know what time does it start?", b: "Do you know what time it starts?", c: "Do you know what time starts it?", correct: 1 },
+    { q: "Choose the correct Indirect Question:", a: "I wonder why she is late.", b: "I wonder why is she late.", c: "I wonder why does she is late.", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "Do you have any idea how much it costs?", b: "Do you have any idea how much does it cost?", c: "Do you have any idea how much costs it?", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "Could you tell me if he is coming?", b: "Could you tell me is he coming?", c: "Could you tell me if is he coming?", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "I'd like to know where did they go.", b: "I'd like to know where they went.", c: "I'd like to know where they go did.", correct: 1 },
+    { q: "Choose the correct Indirect Question:", a: "Do you know if does it rain?", b: "Do you know if it rains?", c: "Do you know if rains it?", correct: 1 },
+    { q: "Choose the correct Indirect Question:", a: "Tell me what are you doing.", b: "Tell me what you are doing.", c: "Tell me what you doing are.", correct: 1 },
+    { q: "Choose the correct Indirect Question:", a: "I'm not sure if he knows.", b: "I'm not sure if does he know.", c: "I'm not sure if he know.", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "Can you explain why the plane was late?", b: "Can you explain why was the plane late?", c: "Can you explain why did the plane was late?", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "Do you know how old is he?", b: "Do you know how old he is?", c: "Do you know how old he is does?", correct: 1 },
+    { q: "Choose the correct Indirect Question:", a: "I wonder if they have arrived.", b: "I wonder if have they arrived.", c: "I wonder if they arrived have.", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "Could you tell me what is your name?", b: "Could you tell me what your name is?", c: "Could you tell me your name what is?", correct: 1 },
+    { q: "Choose the correct Indirect Question:", a: "Do you know where they live?", b: "Do you know where do they live?", c: "Do you know where live they?", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "Tell me why you did that.", b: "Tell me why did you that.", c: "Tell me why did you do that.", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "I'd like to know what time it is.", b: "I'd like to know what time is it.", c: "I'd like to know it is what time.", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "Do you have any idea if he called?", b: "Do you have any idea if did he call?", c: "Do you have any idea if he did called?", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "I'm not sure who he is.", b: "I'm not sure who is he.", c: "I'm not sure who does he is.", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "Can you tell me how it works?", b: "Can you tell me how does it work?", c: "Can you tell me how works it?", correct: 0 },
+    { q: "Choose the correct Indirect Question:", a: "I wonder what he wants.", b: "I wonder what does he want.", c: "I wonder what want he.", correct: 0 }
+];
+
+let selectedQuestions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let timeLeft = 300;
+let timerId;
+let userSelection = -1;
+let studentName = "";
+let mistakes = [];
+
+function startQuiz() {
+    studentName = document.getElementById('student-name').value.trim();
+    if (!studentName) { alert("Please enter your name."); return; }
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('quiz-container').classList.remove('hidden');
+    selectedQuestions = questionBank.sort(() => 0.5 - Math.random()).slice(0, 10);
+    startTimer();
+    renderQuestion();
+}
+
+function startTimer() {
+    timerId = setInterval(() => {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        document.getElementById('timer').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+        if (timeLeft <= 0) endGame();
+    }, 1000);
+}
+
+function renderQuestion() {
+    const q = selectedQuestions[currentQuestionIndex];
+    userSelection = -1;
+    document.getElementById('q-count').textContent = `Question ${currentQuestionIndex + 1}/10`;
+    document.getElementById('question').textContent = q.q;
+    document.getElementById('next-btn').classList.add('hidden');
+    document.getElementById('check-btn-act').classList.remove('hidden');
+    document.getElementById('check-btn-act').disabled = true;
+
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+    const options = [q.a, q.b, q.c];
+    options.forEach((text, i) => {
+        const div = document.createElement('div');
+        div.className = 'option';
+        div.textContent = `${String.fromCharCode(65 + i)}. ${text}`;
+        div.onclick = () => {
+            if (document.getElementById('check-btn-act').classList.contains('hidden')) return;
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            div.classList.add('selected');
+            userSelection = i;
+            document.getElementById('check-btn-act').disabled = false;
+        };
+        container.appendChild(div);
+    });
+}
+
+function checkAnswer() {
+    const q = selectedQuestions[currentQuestionIndex];
+    const optionsText = [q.a, q.b, q.c];
+    const optionsElements = document.querySelectorAll('.option');
+    const isCorrect = userSelection === q.correct;
+
+    if (isCorrect) {
+        score++;
+        document.getElementById('snd-correct').play();
+        optionsElements[userSelection].classList.add('correct');
+    } else {
+        document.getElementById('snd-wrong').play();
+        optionsElements[userSelection].classList.add('wrong');
+        optionsElements[q.correct].classList.add('correct');
+        mistakes.push({
+            q: q.q,
+            user: optionsText[userSelection],
+            correct: optionsText[q.correct]
+        });
+    }
+
+    const seg = document.createElement('div');
+    seg.className = `progress-segment ${isCorrect ? 'correct-bg' : 'wrong-bg'}`;
+    seg.style.width = '10%';
+    document.getElementById('progressBar').appendChild(seg);
+
+    document.getElementById('check-btn-act').classList.add('hidden');
+    document.getElementById('next-btn').classList.remove('hidden');
+}
+
+function goToNextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < 10) renderQuestion();
+    else endGame();
+}
+
+async function endGame() {
+    clearInterval(timerId);
+    const percent = (score / 10) * 100;
+    document.getElementById('quiz-container').classList.add('hidden');
+    document.getElementById('result-card').classList.remove('hidden');
+    document.getElementById('final-score').textContent = `${score}/10`;
+    
+    let analysisHtml = "";
+    if (mistakes.length > 0) {
+        analysisHtml = '<h3>Review Mistakes:</h3>';
+        mistakes.forEach(m => {
+            analysisHtml += `<div class="review-item">
+                <strong>Question:</strong> ${m.q}<br>
+                <span style="color:var(--error); text-decoration:line-through;">Your answer: ${m.user}</span><br>
+                <span style="color:var(--success);">Correct answer: ${m.correct}</span>
+            </div>`;
+        });
+    }
+    document.getElementById('analysis-area').innerHTML = analysisHtml;
+
+    try {
+        const mistakesText = mistakes.map(m => `User: ${m.user} | Correct: ${m.correct}`).join("\n");
+        fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({
+                name: studentName,
+                score: score,
+                percentage: percent + "%",
+                mistakes: mistakesText
+            })
+        });
+    } catch (e) { console.log("Data error"); }
+}
+</script></body></html>
